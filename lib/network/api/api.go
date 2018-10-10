@@ -17,6 +17,7 @@ const APIVersionV1 = "v1"
 
 // API Endpoint patterns
 const (
+	GetInfoHandlerPattern                  = "/info"
 	GetAccountTransactionsHandlerPattern   = "/accounts/{id}/transactions"
 	GetAccountHandlerPattern               = "/accounts/{id}"
 	GetAccountOperationsHandlerPattern     = "/accounts/{id}/operations"
