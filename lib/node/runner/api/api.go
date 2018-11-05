@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"boscoin.io/sebak/lib/block"
+	"boscoin.io/sebak/lib/common"
 	"boscoin.io/sebak/lib/network"
 	"boscoin.io/sebak/lib/network/httputils"
 	"boscoin.io/sebak/lib/node"
@@ -35,9 +36,15 @@ type NetworkHandlerAPI struct {
 	version        string
 	nodeInfo       node.NodeInfo
 	GetLatestBlock func() block.Block
+	txChecks       []common.CheckerFunc
 }
 
-func NewNetworkHandlerAPI(localNode *node.LocalNode, network network.Network, storage *storage.LevelDBBackend, urlPrefix string, nodeInfo node.NodeInfo) *NetworkHandlerAPI {
+func NewNetworkHandlerAPI(localNode *node.LocalNode,
+	network network.Network,
+	storage *storage.LevelDBBackend,
+	urlPrefix string,
+	nodeInfo node.NodeInfo,
+	txChecks []common.CheckerFunc) *NetworkHandlerAPI {
 	return &NetworkHandlerAPI{
 		localNode: localNode,
 		network:   network,
@@ -45,6 +52,7 @@ func NewNetworkHandlerAPI(localNode *node.LocalNode, network network.Network, st
 		urlPrefix: urlPrefix,
 		version:   APIVersionV1,
 		nodeInfo:  nodeInfo,
+		txChecks:  txChecks,
 	}
 }
 

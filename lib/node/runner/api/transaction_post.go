@@ -1,15 +1,16 @@
 package api
 
 import (
-	"boscoin.io/sebak/lib/errors"
-	"boscoin.io/sebak/lib/network/httputils"
-	"boscoin.io/sebak/lib/node/runner/api/resource"
-	"boscoin.io/sebak/lib/transaction"
-	"bufio"
-	"bytes"
 	"encoding/json"
 	"io"
+	"io/ioutil"
 	"net/http"
+
+	"boscoin.io/sebak/lib/block"
+	"boscoin.io/sebak/lib/common"
+	"boscoin.io/sebak/lib/network/httputils"
+	"boscoin.io/sebak/lib/node/runner"
+	"boscoin.io/sebak/lib/node/runner/api/resource"
 )
 
 type TeeReadCloser struct {
@@ -28,32 +29,39 @@ func NewTeeReadCloser(origin io.ReadCloser, w io.Writer) io.ReadCloser {
 	}
 }
 
-func (api NetworkHandlerAPI) PostTransactionsHandler(w http.ResponseWriter, r *http.Request, handler http.HandlerFunc) {
-	var bufferResponse bytes.Buffer
-	writer := bufio.NewWriter(&bufferResponse)
-	interceptedResponseWriter := httputils.NewResponseWriterInterceptor(w, writer)
+func (api NetworkHandlerAPI) PostTransactionsHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
 
-	var bufferRequest bytes.Buffer
-	r.Body = NewTeeReadCloser(r.Body, &bufferRequest)
-
-	handler(interceptedResponseWriter, r)
-	writer.Flush()
-
-	if interceptedResponseWriter.StatusCode() != http.StatusOK {
-		var errResponse errors.Error
-		if err := json.Unmarshal(bufferResponse.Bytes(), &errResponse); err != nil {
-			// Just bypass
-			w.WriteHeader(interceptedResponseWriter.StatusCode())
-			w.Write(bufferResponse.Bytes())
-			return
-		}
-		httputils.WriteJSONError(w, &errResponse)
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		httputils.WriteJSONError(w, err)
 		return
 	}
 
-	var tx transaction.Transaction
+	message := common.NetworkMessage{Type: common.TransactionMessage, Data: body}
+	checker := &runner.MessageChecker{
+		DefaultChecker:  common.DefaultChecker{Funcs: api.txChecks},
+		Consensus:       api.consensus,
+		TransactionPool: api.transactionPool,
+		Storage:         api.storage,
+		LocalNode:       api.localNode,
+		NetworkID:       api.consensus.NetworkID,
+		Message:         message,
+		Log:             log,
+		Conf:            api.conf,
+	}
+
+	if err = common.RunChecker(checker, common.DefaultDeferFunc); err != nil {
+		if len(checker.Transaction.H.Hash) > 0 {
+			block.SaveTransactionHistory(api.storage, checker.Transaction, block.TransactionHistoryStatusRejected)
+		}
+		httputils.WriteJSONError(err)
+		return
+	}
+
+	tx := checker.Transaction
 	json.Unmarshal(bufferRequest.Bytes(), &tx)
 	if err := httputils.WriteJSON(w, 200, resource.NewTransactionPost(tx)); err != nil {
-		http.Error(w, "Error reading request body", http.StatusInternalServerError)
+		httputils.WriteJSONError(w, err)
 	}
 }

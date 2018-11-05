@@ -224,6 +224,7 @@ func (nr *NodeRunner) Ready() {
 		nr.storage,
 		network.UrlPathPrefixAPI,
 		nr.nodeInfo,
+		MessageTransactionClientCheckerFuncs,
 	)
 	apiHandler.GetLatestBlock = nr.Consensus().LatestBlock
 
@@ -254,10 +255,9 @@ func (nr *NodeRunner) Ready() {
 
 	TransactionsHandler := func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
-			apiHandler.PostTransactionsHandler(w, r, nodeHandler.MessageHandler)
+			apiHandler.PostTransactionsHandler(w, r)
 			return
 		}
-
 		apiHandler.GetTransactionsHandler(w, r)
 		return
 	}

@@ -26,6 +26,25 @@ import (
 	"boscoin.io/sebak/lib/transaction"
 )
 
+var MessageTransactionClientCheckerFuncs = []common.CheckerFunc{
+	TransactionUnmarshal,
+	HasTransaction,
+	SaveTransactionHistory,
+	MessageHasSameSource,
+	MessageValidate,
+	PushIntoTransactionPool,
+	BroadcastTransaction,
+}
+
+var MessageTransactionNodeCheckerFuncs = []common.CheckerFunc{
+	TransactionUnmarshal,
+	HasTransaction,
+	SaveTransactionHistory,
+	MessageHasSameSource,
+	MessageValidate,
+	PushIntoTransactionPool,
+}
+
 type MessageChecker struct {
 	common.DefaultChecker
 

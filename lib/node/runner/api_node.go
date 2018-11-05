@@ -92,16 +92,6 @@ func (api NetworkHandlerNode) ConnectHandler(w http.ResponseWriter, r *http.Requ
 	api.network.MessageBroker().Response(w, b)
 }
 
-var HandleTransactionCheckerFuncs = []common.CheckerFunc{
-	TransactionUnmarshal,
-	HasTransaction,
-	SaveTransactionHistory,
-	MessageHasSameSource,
-	MessageValidate,
-	PushIntoTransactionPool,
-	BroadcastTransaction,
-}
-
 func (api NetworkHandlerNode) MessageHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
@@ -113,7 +103,7 @@ func (api NetworkHandlerNode) MessageHandler(w http.ResponseWriter, r *http.Requ
 
 	message := common.NetworkMessage{Type: common.TransactionMessage, Data: body}
 	checker := &MessageChecker{
-		DefaultChecker:  common.DefaultChecker{Funcs: HandleTransactionCheckerFuncs},
+		DefaultChecker:  common.DefaultChecker{Funcs: MessageTransactionNodeCheckerFuncs},
 		Consensus:       api.consensus,
 		TransactionPool: api.transactionPool,
 		Storage:         api.storage,
