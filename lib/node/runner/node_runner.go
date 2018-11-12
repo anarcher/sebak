@@ -21,6 +21,7 @@ import (
 	"boscoin.io/sebak/lib/common"
 	"boscoin.io/sebak/lib/consensus"
 	"boscoin.io/sebak/lib/errors"
+	"boscoin.io/sebak/lib/metrics"
 	"boscoin.io/sebak/lib/network"
 	"boscoin.io/sebak/lib/node"
 	"boscoin.io/sebak/lib/node/runner/api"
@@ -156,6 +157,8 @@ func NewNodeRunner(
 }
 
 func (nr *NodeRunner) Ready() {
+	metrics.SetVersion()
+
 	rateLimitMiddlewareAPI := network.RateLimitMiddleware(nr.log, nr.Conf.RateLimitRuleAPI)
 	if err := nr.network.AddMiddleware(network.RouterNameAPI, rateLimitMiddlewareAPI); err != nil {
 		nr.log.Error("`network.RateLimitMiddleware` for `RouterNameAPI` has an error", "err", err)
