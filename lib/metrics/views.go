@@ -7,9 +7,7 @@ import (
 
 var (
 	VersionView = &view.View{
-		Name:        "version",
 		Measure:     Version,
-		Description: "The version of this node",
 		Aggregation: view.LastValue(),
 		TagKeys:     []tag.Key{KeyVersion, GitCommit, GoVersion},
 	}
@@ -31,5 +29,8 @@ var (
 var (
 	Views = []*view.View{
 		VersionView,
+		ConsensusHeightView,
+		ConsensusRoundsView,
+		ConsensusNumTxsView,
 	}
 )

@@ -14,6 +14,7 @@ import (
 
 	ghandlers "github.com/gorilla/handlers"
 	logging "github.com/inconshreveable/log15"
+	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"go.opencensus.io/exporter/prometheus"
 	"go.opencensus.io/stats/view"
 
@@ -635,8 +636,13 @@ func (nr *NodeRunner) initMetricViews() error {
 }
 
 func (nr *NodeRunner) initMetricPromExpoter() (*prometheus.Exporter, error) {
+	reg := stdprometheus.NewRegistry()
+	reg.MustRegister(stdprometheus.NewGoCollector())
+	reg.MustRegister(stdprometheus.NewProcessCollector(stdprometheus.ProcessCollectorOpts{}))
+
 	exporter, err := prometheus.NewExporter(prometheus.Options{
 		Namespace: metrics.Namespace,
+		Registry:  reg,
 	})
 	if err != nil {
 		return nil, err
