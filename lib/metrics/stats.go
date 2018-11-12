@@ -31,6 +31,7 @@ var (
 	KeyVersion, _     = tag.NewKey("version")   // with Version
 	GitCommit, _      = tag.NewKey("gitcommit") // with Version
 	GoVersion, _      = tag.NewKey("goversion") // with Version
+	BuildDate, _      = tag.NewKey("build_date")
 	HTTPMethod, _     = tag.NewKey("http_method")
 	HTTPStatusCode, _ = tag.NewKey("http_status")
 )

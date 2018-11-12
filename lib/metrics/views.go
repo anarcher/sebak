@@ -33,10 +33,3 @@ var (
 		VersionView,
 	}
 )
-
-func RegisterViews(views ...*view.View) error {
-	if err := view.Register(views...); err != nil {
-		return err
-	}
-	return nil
-}

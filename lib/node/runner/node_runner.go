@@ -14,13 +14,15 @@ import (
 
 	ghandlers "github.com/gorilla/handlers"
 	logging "github.com/inconshreveable/log15"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opencensus.io/exporter/prometheus"
+	"go.opencensus.io/stats/view"
 
 	"boscoin.io/sebak/lib/ballot"
 	"boscoin.io/sebak/lib/block"
 	"boscoin.io/sebak/lib/common"
 	"boscoin.io/sebak/lib/consensus"
 	"boscoin.io/sebak/lib/errors"
+	"boscoin.io/sebak/lib/metrics"
 	"boscoin.io/sebak/lib/network"
 	"boscoin.io/sebak/lib/node"
 	"boscoin.io/sebak/lib/node/runner/api"
@@ -222,7 +224,22 @@ func (nr *NodeRunner) Ready() {
 		Methods("GET", "POST").
 		MatcherFunc(common.PostAndJSONMatcher)
 
-	nr.network.AddHandler(network.UrlPathPrefixMetric, promhttp.Handler().ServeHTTP)
+	// metrics
+	{
+		if err := nr.initMetricViews(); err != nil {
+			nr.log.Error("init metric views error", "err", err)
+		}
+
+		exporter, err := nr.initMetricPromExpoter()
+		if err != nil {
+			nr.log.Error("init metric exporter error", "err", err)
+		}
+
+		//nr.network.AddHandler(network.UrlPathPrefixMetric, promhttp.Handler().ServeHTTP)
+		nr.network.AddHandler(network.UrlPathPrefixMetric, exporter.ServeHTTP)
+
+		metrics.RecordVersion(nil)
+	}
 
 	// api handlers
 	apiHandler := api.NewNetworkHandlerAPI(
@@ -607,4 +624,23 @@ func (nr *NodeRunner) proposeNewBallot(round uint64) (ballot.Ballot, error) {
 
 func (nr *NodeRunner) NodeInfo() node.NodeInfo {
 	return nr.nodeInfo
+}
+
+func (nr *NodeRunner) initMetricViews() error {
+	// Register the views
+	if err := view.Register(metrics.Views...); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (nr *NodeRunner) initMetricPromExpoter() (*prometheus.Exporter, error) {
+	exporter, err := prometheus.NewExporter(prometheus.Options{
+		Namespace: metrics.Namespace,
+	})
+	if err != nil {
+		return nil, err
+	}
+	view.RegisterExporter(exporter)
+	return exporter, nil
 }
