@@ -335,6 +335,10 @@ func (nr *NodeRunner) Ready() {
 		apiHandler.HandlerURLPattern(api.GetBlockHandlerPattern),
 		cache.WrapHandlerFunc(apiHandler.GetBlockHandler),
 	).Methods("GET", "OPTIONS")
+	nr.network.AddHandler(
+		apiHandler.HandlerURLPattern(api.GetBlockTransactionsHandlerPattern),
+		cache.WrapHandlerFunc(apiHandler.GetBlockTransactionsHandler),
+	).Methods("GET", "OPTIONS")
 
 	// pprof
 	if DebugPProf == true {

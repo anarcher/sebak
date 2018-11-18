@@ -410,7 +410,7 @@ func (st *LevelDBBackend) Walk(prefix string, option *WalkOption, walkFunc WalkF
 	}
 
 	for ok := iter.Seek(st.makeKey(cursor)); ok; ok = iterFunc() {
-		if cnt >= option.Limit {
+		if option.Limit > 0 && cnt >= option.Limit { // option.Limit == 0 means unlimited
 			return iter.Error()
 		}
 

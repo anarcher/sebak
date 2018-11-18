@@ -35,6 +35,7 @@ func prepareAPIServer() (*httptest.Server, *storage.LevelDBBackend) {
 	router.HandleFunc(GetTransactionOperationsHandlerPattern, apiHandler.GetOperationsByTxHashHandler).Methods("GET")
 	router.HandleFunc(GetBlocksHandlerPattern, apiHandler.GetBlocksHandler).Methods("GET")
 	router.HandleFunc(GetBlockHandlerPattern, apiHandler.GetBlockHandler).Methods("GET")
+	router.HandleFunc(GetBlockTransactionsHandlerPattern, apiHandler.GetBlockTransactionsHandler).Methods("GET")
 	ts := httptest.NewServer(router)
 	return ts, storage
 }
