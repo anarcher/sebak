@@ -71,8 +71,8 @@ func finishBallotWithProposedTxs(st *storage.LevelDBBackend, b ballot.Ballot, pr
 	}
 
 	r := b.VotingBasis()
-	r.Height++                                      // next block
-	r.TotalTxs += uint64(len(b.Transactions()) + 1) // + 1 for ProposerTransaction
+	r.Height++                                                              // next block
+	r.TotalTxs += uint64(len(b.Transactions()) + len(proposedTransactions)) // + ProposerTransactions
 	r.TotalOps += uint64(nOps + len(b.ProposerTransaction().B.Operations))
 
 	blk := block.NewBlock(
